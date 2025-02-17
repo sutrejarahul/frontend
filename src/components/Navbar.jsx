@@ -15,7 +15,7 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [noResults, setNoResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [showSearchResults,setShowSearchResults] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
   useEffect(() => {
     fetchData();
   }, []);
@@ -23,8 +23,8 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
   const fetchData = async (value) => {
     try {
       const response = await axios.get("http://localhost:8080/api/products");
-      setSearchResults(response.data);
-      console.log(response.data);
+      setSearchResults(response.data.data);
+      // console.log("here response ==> ", response.data.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -34,16 +34,15 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
     setInput(value);
     if (value.length >= 1) {
       setShowSearchResults(true)
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/products/search?keyword=${value}`
-      );
-      setSearchResults(response.data);
-      setNoResults(response.data.length === 0);
-      console.log(response.data);
-    } catch (error) {
-      console.error("Error searching:", error);
-    }
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/products/search?keyword=${value}`
+        );
+        setSearchResults(response.data.data);
+        setNoResults(response.data.data.length === 0);
+      } catch (error) {
+        console.error("Error searching:", error);
+      }
     } else {
       setShowSearchResults(false);
       setSearchResults([]);
@@ -51,37 +50,8 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
     }
   };
 
-  
-  // const handleChange = async (value) => {
-  //   setInput(value);
-  //   if (value.length >= 1) {
-  //     setShowSearchResults(true);
-  //     try {
-  //       let response;
-  //       if (!isNaN(value)) {
-  //         // Input is a number, search by ID
-  //         response = await axios.get(`http://localhost:8080/api/products/search?id=${value}`);
-  //       } else {
-  //         // Input is not a number, search by keyword
-  //         response = await axios.get(`http://localhost:8080/api/products/search?keyword=${value}`);
-  //       }
-
-  //       const results = response.data;
-  //       setSearchResults(results);
-  //       setNoResults(results.length === 0);
-  //       console.log(results);
-  //     } catch (error) {
-  //       console.error("Error searching:", error.response ? error.response.data : error.message);
-  //     }
-  //   } else {
-  //     setShowSearchResults(false);
-  //     setSearchResults([]);
-  //     setNoResults(false);
-  //   }
-  // };
-
   const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
+    setSelectedCategory(category.categoryName);
     onSelectCategory(category);
   };
   const toggleTheme = () => {
@@ -95,12 +65,12 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
   }, [theme]);
 
   const categories = [
-    "Laptop",
-    "Headphone",
-    "Mobile",
-    "Electronics",
-    "Toys",
-    "Fashion",
+    { id: 2, categoryName: "Laptop" },
+    { id: 6, categoryName: "Headphone" },
+    { id: 1, categoryName: "Mobile" },
+    { id: 5, categoryName: "Electronics" },
+    { id: 4, categoryName: "Toys" },
+    { id: 3, categoryName: "Fashion" },
   ];
   return (
     <>
@@ -145,17 +115,17 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                   >
-                    Categories
+                    {selectedCategory ? selectedCategory : "Categories"}
                   </a>
 
                   <ul className="dropdown-menu">
                     {categories.map((category) => (
-                      <li key={category}>
+                      <li key={category.id}>
                         <button
                           className="dropdown-item"
                           onClick={() => handleCategorySelect(category)}
                         >
-                          {category}
+                          {category.categoryName}
                         </button>
                       </li>
                     ))}
@@ -193,14 +163,15 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
                 />
                 {showSearchResults && (
                   <ul className="list-group">
-                    {searchResults.length > 0 ? (  
-                        searchResults.map((result) => (
-                          <li key={result.id} className="list-group-item">
-                            <a href={`/product/${result.id}`} className="search-result-link">
+                    {searchResults.length > 0 ? (
+                      searchResults.map((result) => (
+
+                        <li key={result.id} className="list-group-item">
+                          <a href={`/product/${result.id}`} className="search-result-link">
                             <span>{result.name}</span>
-                            </a>
-                          </li>
-                        ))
+                          </a>
+                        </li>
+                      ))
                     ) : (
                       noResults && (
                         <p className="no-results-message">

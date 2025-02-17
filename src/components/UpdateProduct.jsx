@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
+
+const categories = [
+  { id: 2, categoryName: "Laptop" },
+  { id: 6, categoryName: "Headphone" },
+  { id: 1, categoryName: "Mobile" },
+  { id: 5, categoryName: "Electronics" },
+  { id: 4, categoryName: "Toys" },
+  { id: 3, categoryName: "Fashion" },
+];
+
 const UpdateProduct = () => {
   const { id } = useParams();
   const [product, setProduct] = useState({});
@@ -12,48 +22,58 @@ const UpdateProduct = () => {
     description: "",
     brand: "",
     price: "",
-    category: "",
+    category: { id: 0, categoryName: "" },
     releaseDate: "",
     productAvailable: false,
     stockQuantity: "",
+    imageType: "",
+    imageBase64: ""
   });
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8080/api/product/${id}`
-        );
-
-        setProduct(response.data);
-      
-        const responseImage = await axios.get(
-          `http://localhost:8080/api/product/${id}/image`,
-          { responseType: "blob" }
-        );
-       const imageFile = await converUrlToFile(responseImage.data,response.data.imageName)
-        setImage(imageFile);     
-        setUpdateProduct(response.data);
-      } catch (error) {
-        console.error("Error fetching product:", error);
-      }
-    };
-
     fetchProduct();
   }, [id]);
 
-  useEffect(() => {
-    console.log("image Updated", image);
-  }, [image]);
+  const fetchProduct = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/products/${id}`
+      );
 
+      setProduct(response.data.data);
+      setUpdateProduct(response.data.data);
+      const imageFile = await base64ToFile(response.data.data.imageBase64, response.data.data.imageName, response.data.data.imageType)
+      setImage(imageFile);
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    }
+  };
 
+  const base64ToFile = async (base64String, fileName, mimeType) => {
+    // Decode Base64 string into raw binary data
+    const byteCharacters = atob(base64String);
+    const byteNumbers = new Array(byteCharacters.length);
 
-  const converUrlToFile = async(blobData, fileName) => {
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+
+    // Convert to Uint8Array (raw binary data)
+    const byteArray = new Uint8Array(byteNumbers);
+
+    // Create a Blob from binary data
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    // Convert Blob to File
+    return new File([blob], fileName, { type: mimeType });
+  };
+
+  const convertUrlToFile = async (blobData, fileName) => {
     const file = new File([blobData], fileName, { type: blobData.type });
     return file;
   }
- 
-  const handleSubmit = async(e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("images", image)
     console.log("productsdfsfsf", updateProduct)
@@ -63,11 +83,11 @@ const UpdateProduct = () => {
       "product",
       new Blob([JSON.stringify(updateProduct)], { type: "application/json" })
     );
-  
 
-  console.log("formData : ", updatedProduct)
+
+    console.log("formData : ", updatedProduct)
     axios
-      .put(`http://localhost:8080/api/product/${id}`, updatedProduct, {
+      .post(`http://localhost:8080/api/products`, updatedProduct, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -75,14 +95,15 @@ const UpdateProduct = () => {
       .then((response) => {
         console.log("Product updated successfully:", updatedProduct);
         alert("Product updated successfully!");
+        fetchProduct();
       })
       .catch((error) => {
         console.error("Error updating product:", error);
-        console.log("product unsuccessfull update",updateProduct)
+        console.log("product unsuccessfull update", updateProduct)
         alert("Failed to update product. Please try again.");
       });
   };
- 
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,15 +112,24 @@ const UpdateProduct = () => {
       [name]: value,
     });
   };
-  
+
+  const handleCategoryInputChange = (event) => {
+    const selectedCategoryId = parseInt(event.target.value);
+    const selectedCategory = categories.find(cat => cat.id === selectedCategoryId) || null;
+    setUpdateProduct((prevProduct) => ({
+      ...prevProduct,
+      category: selectedCategory,
+    }));
+  };
+
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
   };
-  
+
 
   return (
     <div className="update-product-container" >
-      <div className="center-container"style={{marginTop:"7rem"}}>
+      <div className="center-container" style={{ marginTop: "7rem" }}>
         <h1>Update Product</h1>
         <form className="row g-3 pt-1" onSubmit={handleSubmit}>
           <div className="col-md-6">
@@ -163,18 +193,17 @@ const UpdateProduct = () => {
             </label>
             <select
               className="form-select"
-              value={updateProduct.category}
-              onChange={handleChange}
+              value={updateProduct.category?.id || ""}
+              onChange={handleCategoryInputChange}
               name="category"
               id="category"
             >
               <option value="">Select category</option>
-              <option value="laptop">Laptop</option>
-              <option value="headphone">Headphone</option>
-              <option value="mobile">Mobile</option>
-              <option value="electronics">Electronics</option>
-              <option value="toys">Toys</option>
-              <option value="fashion">Fashion</option>
+              {
+                categories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.categoryName}</option>
+                ))
+              }
             </select>
           </div>
 
@@ -197,7 +226,7 @@ const UpdateProduct = () => {
               <h6>Image</h6>
             </label>
             <img
-              src={image ? URL.createObjectURL(image) : "Image unavailable"}
+              src={`data:${updateProduct.imageType};base64, ${updateProduct.imageBase64}`}
               alt={product.imageName}
               style={{
                 width: "100%",

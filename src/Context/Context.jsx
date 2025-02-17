@@ -5,11 +5,11 @@ const AppContext = createContext({
   data: [],
   isError: "",
   cart: [],
-  addToCart: (product) => {},
-  removeFromCart: (productId) => {},
-  refreshData:() =>{},
-  updateStockQuantity: (productId, newQuantity) =>{}
-  
+  addToCart: (product) => { },
+  removeFromCart: (productId) => { },
+  refreshData: () => { },
+  updateStockQuantity: (productId, newQuantity) => { }
+
 });
 
 export const AppProvider = ({ children }) => {
@@ -36,26 +36,26 @@ export const AppProvider = ({ children }) => {
   };
 
   const removeFromCart = (productId) => {
-    console.log("productID",productId)
+    console.log("productID", productId)
     const updatedCart = cart.filter((item) => item.id !== productId);
     setCart(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
-    console.log("CART",cart)
+    console.log("CART", cart)
   };
 
   const refreshData = async () => {
     try {
       const response = await axios.get("/products");
-      setData(response.data);
+      setData(response.data.data);
     } catch (error) {
       setIsError(error.message);
     }
   };
 
-  const clearCart =() =>{
+  const clearCart = () => {
     setCart([]);
   }
-  
+
   useEffect(() => {
     refreshData();
   }, []);
@@ -63,9 +63,9 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
-  
+
   return (
-    <AppContext.Provider value={{ data, isError, cart, addToCart, removeFromCart,refreshData, clearCart  }}>
+    <AppContext.Provider value={{ data, isError, cart, addToCart, removeFromCart, refreshData, clearCart }}>
       {children}
     </AppContext.Provider>
   );
