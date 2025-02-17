@@ -26,8 +26,7 @@ const UpdateProduct = () => {
     releaseDate: "",
     productAvailable: false,
     stockQuantity: "",
-    imageType: "",
-    imageBase64: ""
+    imageUrl: "",
   });
 
   useEffect(() => {
@@ -39,39 +38,12 @@ const UpdateProduct = () => {
       const response = await axios.get(
         `http://localhost:8080/api/products/${id}`
       );
-
       setProduct(response.data.data);
       setUpdateProduct(response.data.data);
-      const imageFile = await base64ToFile(response.data.data.imageBase64, response.data.data.imageName, response.data.data.imageType)
-      setImage(imageFile);
     } catch (error) {
       console.error("Error fetching product:", error);
     }
   };
-
-  const base64ToFile = async (base64String, fileName, mimeType) => {
-    // Decode Base64 string into raw binary data
-    const byteCharacters = atob(base64String);
-    const byteNumbers = new Array(byteCharacters.length);
-
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-
-    // Convert to Uint8Array (raw binary data)
-    const byteArray = new Uint8Array(byteNumbers);
-
-    // Create a Blob from binary data
-    const blob = new Blob([byteArray], { type: mimeType });
-
-    // Convert Blob to File
-    return new File([blob], fileName, { type: mimeType });
-  };
-
-  const convertUrlToFile = async (blobData, fileName) => {
-    const file = new File([blobData], fileName, { type: blobData.type });
-    return file;
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,7 +75,6 @@ const UpdateProduct = () => {
         alert("Failed to update product. Please try again.");
       });
   };
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -226,7 +197,7 @@ const UpdateProduct = () => {
               <h6>Image</h6>
             </label>
             <img
-              src={`data:${updateProduct.imageType};base64, ${updateProduct.imageBase64}`}
+              src={updateProduct.imageUrl}
               alt={product.imageName}
               style={{
                 width: "100%",

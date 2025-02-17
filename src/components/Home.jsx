@@ -78,7 +78,7 @@ const Home = ({ selectedCategory }) => {
           </h2>
         ) : (
           filteredProducts.map((product) => {
-            const { id, brand, name, price, productAvailable, imageType, imageBase64 } = product;
+            const { id, brand, name, price, productAvailable, imageUrl } = product;
             const cardStyle = {
               width: "18rem",
               height: "12rem",
@@ -107,7 +107,7 @@ const Home = ({ selectedCategory }) => {
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
                   <img
-                    src={`data:${imageType};base64, ${imageBase64}`}
+                    src={imageUrl}
                     alt={name}
                     style={{
                       width: "100%",

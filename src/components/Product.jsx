@@ -3,13 +3,11 @@ import { useContext, useEffect } from "react";
 import { useState } from "react";
 import AppContext from "../Context/Context";
 import axios from "../axios";
-import UpdateProduct from "./UpdateProduct";
+
 const Product = () => {
   const { id } = useParams();
-  const { data, addToCart, removeFromCart, cart, refreshData } =
-    useContext(AppContext);
+  const { addToCart, removeFromCart, refreshData } = useContext(AppContext);
   const [product, setProduct] = useState(null);
-  const [imageUrl, setImageUrl] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,7 +57,7 @@ const Product = () => {
       <div className="containers" style={{ display: "flex" }}>
         <img
           className="left-column-img"
-          src={`data:${product.imageType};base64, ${product.imageBase64}`}
+          src={product.imageUrl}
           alt={product.imageName}
           style={{ width: "50%", height: "auto" }}
         />
